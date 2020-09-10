@@ -205,4 +205,50 @@ class MuseumTest < Minitest::Test
 
     assert_equal "Bob has won the IMAX exhibit lottery", dmns.announce_lottery_winner(imax)
   end
+
+  def test_it_can_attend_exhibits_and_be_charged
+    dmns = Museum.new("Denver Museum of Nature and Science")
+    gems_and_minerals = Exhibit.new({name: "Gems and Minerals", cost: 0})
+    dead_sea_scrolls = Exhibit.new({name: "Dead Sea Scrolls", cost: 10})
+    imax = Exhibit.new({name: "IMAX",cost: 15})
+
+    dmns.add_exhibit(gems_and_minerals)
+    dmns.add_exhibit(dead_sea_scrolls)
+    dmns.add_exhibit(imax)
+
+    tj = Patron.new("TJ", 7)
+    tj.add_interest("IMAX")
+    tj.add_interest("Dead Sea Scrolls")
+    dmns.admit(tj)
+    assert_equal 7, tj.spending_money
+
+    patron_1 = Patron.new("Bob", 10)
+    patron_1.add_interest("Dead Sea Scrolls")
+    patron_1.add_interest("IMAX")
+    dmns.admit(patron_1)
+    assert_equal 0, patron_1.spending_money
+
+    patron_2 = Patron.new("Sally", 20)
+    patron_2.add_interest("Dead Sea Scrolls")
+    patron_2.add_interest("IMAX")
+    dmns.admit(patron_2)
+    assert_equal 5, patron_2.spending_money #didn't attend imax first like in spec
+
+    morgan = Patron.new("Morgan", 15)
+    morgan.add_interest("Gems and Minerals")
+    morgan.add_interest("Dead Sea Scrolls")
+    dmns.admit(morgan)
+    assert_equal 5, morgan.spending_money
+
+    # expected = {
+    #   gems_and_minerals => [#<Patron:0x00007f9018048be8...>, <Patron:0x00007f90180e0948...>],
+    #   dead_sea_scrolls => [#<Patron:0x00007f901823c8a0...>],
+    #   imax => [#<Patron:0x00007f90180e0948...>]
+    # }
+
+    # assert_equal [], dmns.patrons_of_exhibits
+    #could not get to test this
+
+    assert_equal 35, dmns.revenue #turns out to be 30 b/c sally went to dead sea scrolls first
+  end
 end
